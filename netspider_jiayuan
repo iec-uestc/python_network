@@ -18,9 +18,28 @@ failtimes = 0
 photo_url = ''
 photooutpath = ''
 failArr = ['失败列表：']
+loglists = ['']
 
+def createLog(loglist):
+    global failArr
+    try:
+        with open('jiayuan_spider.log','a+') as file1:
+            file1.write(str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))))
+            for it in loglist:
+                file1.write(it)
+                file1.write('\n')
+            for it in failArr:
+                file1.write(it)
+                file1.write('\n')
+            file1.write('\n\n\n')
+            file1.close()
+            print('日志保存成功...')
+    except:
+        print('日志保存失败')
+    
 def loginJiaYuan():
     global isLogin
+    global loglists
     post_headers = {'Referer' : 'http://login.jiayuan.com/err.php?err_type=2&pre_url=http://www.jiayuan.com/usercp',
                           'Host': 'login.jiayuan.com',
                           'Accept' : 'text/html, application/xhtml+xml, */*',
@@ -67,6 +86,7 @@ def loginJiaYuan():
 def requestData(url):
     '''请求数据模块'''
     global isNetCon
+    global loglists
     try:
         data = ''
         req = urllib.request.Request(url)
@@ -76,6 +96,7 @@ def requestData(url):
         data = reqs.read().decode('utf-8')
     except urllib.error.URLError as err:
         print('网络未连接！')
+        loglists.append('网络未连接！')
         isNetCon = False
         return data
     print('得到服务器数据')
@@ -146,8 +167,6 @@ def formatUserData(data):
 
 def outputData(url,result,outfilename = 'userdata'):
     '''数据输出模块'''
-    if(not(outfilename)):
-        outfilename = 'userdata'
     outfile = outfilename + '.csv'
     try:
         with open(outfile,'a+') as file0:
@@ -180,6 +199,11 @@ outputFileName = input('请输入输出文件名（默认为userData）')
 loginJiaYuan()
 if(isLogin):
     print('登陆成功！')
+    loglists.append('登陆成功！')
+    if(not(outputFileName)):
+        outputFileName = 'userData'
+    outtmp = '数据输出文件：' + str(outputFileName) + '.csv'
+    loglists.append(outtmp)
     while(gettimes<(dataNum)):
         url = 'http://www.jiayuan.com/' + str(userurl)
         print('第',(gettimes+1),'次查询：')
@@ -194,11 +218,17 @@ if(isLogin):
         time.sleep(0.2)
 else:
     print('登陆失败！')
+    loglists.append('登陆失败！')
 print('===========================================')
 print('===========================================')
 if(isNetCon):
-    print('数据抓取完成，共进行:',gettimes,'次数据抓取，失败:',failtimes,'次')
+    tmp = '数据抓取完成，共进行:'+ str(gettimes) + '次数据抓取，失败:' + str(failtimes) + '次'
+    print(tmp)
+    loglists.append(tmp)
 else:
     print('数据抓取失败，请检查网络连接。')
+    loglists.append('数据抓取失败，请检查网络连接。')
 for item in failArr:
         print(item)
+createLog(loglists)
+tm = input('按任意键退出')
