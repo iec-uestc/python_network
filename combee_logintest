@@ -1,0 +1,60 @@
+import urllib.request
+import optparse
+import http.cookiejar
+import urllib.parse
+import time
+import re
+import os
+
+isLogin = False
+
+def loginJiaYuan(post_headers,postDict,loginurl):
+    global isLogin 
+    print('登陆中...')
+    cj = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+    urllib.request.install_opener(opener)
+    resp = urllib.request.urlopen(loginurl)
+    #<input name="authenticity_token" type="hidden" value="3obOFbXFtEjOBYqwem9/U0UGlNZOmJXFVkgJdT7p4TU=">
+    html = resp.read().decode()
+    a_token = re.findall('<input\s*?name=["]authenticity_token["].*?value=["](.*?)["]',html)
+    postDict['authenticity_token'] = a_token[0]
+    if(a_token):
+        print(a_token[0])
+    else:
+        print('no match')
+    for index, cookie in enumerate(cj):
+        print( '[',index, ']',cookie)
+    postData = urllib.parse.urlencode(postDict).encode()
+    req = urllib.request.Request(loginurl, postData)
+    for key,itm in post_headers.items():
+        req.add_header(key,itm)
+    html = urllib.request.urlopen(req)
+    for index, cookie in enumerate(cj):
+        print( '[',index, ']',cookie)
+    html = urllib.request.urlopen('https://combee.co')
+    reqres = html.read().decode()
+   # print(reqres)
+#loginJiaYuan(username,userpassword,referer,host,cookie,loginurl)
+# postDict = {'channel':'0', 'name':username,'password':userpassword,'ijg_login':'1','position':'0'}
+usrname_com = '13258216325'
+usrpassword_com = '123456'
+usrname = 'p2p_test@yeah.net'
+usrpassword = '123456qq'
+refer = 'login.jiayuan.com'
+refer_com = 'http://combee.co/sign_in'
+host_com = 'combee.co'
+host = 'login.jiayuan.com'
+cookie_combee = 'Hm_lvt_e2e047ba2a262d9d93cb452fd93f05c9=1386560574;Hm_lpvt_e2e047ba2a262d9d93cb452fd93f05c9=1386560586'
+cookie = 'registeruid=104463413; main_search:104463413=%7C%7C%7C00; REG_REF_URL=; poplogincount=1'
+post_headers = {'Referer' : refer_com,
+                          'Host': host_com,
+                          'Accept' : 'text/html, application/xhtml+xml, */*',
+                          'Content-Type' : 'application/x-www-form-urlencoded',
+                          'User-Agent' : 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)'}
+postDict = {'user[login]':usrname_com,'user[password]':usrpassword_com,'user[remember_me]':'0'}
+loginurl = 'http://login.jiayuan.com/dologin.php'
+loginurl_com = 'http://combee.co/sign_in'
+#loginJiaYuan(post_headers,postDict,loginurl):
+loginJiaYuan(post_headers,postDict,loginurl_com)
+
