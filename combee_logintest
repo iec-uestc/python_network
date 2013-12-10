@@ -5,38 +5,77 @@ import urllib.parse
 import time
 import re
 import os
+import json
 
 isLogin = False
 
-def loginJiaYuan(post_headers,postDict,loginurl):
-    global isLogin 
+def loginCombee(post_headers,postDict,loginurl):
+    global isLogin
     print('登陆中...')
     cj = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
     urllib.request.install_opener(opener)
     resp = urllib.request.urlopen(loginurl)
-    #<input name="authenticity_token" type="hidden" value="3obOFbXFtEjOBYqwem9/U0UGlNZOmJXFVkgJdT7p4TU=">
     html = resp.read().decode()
     a_token = re.findall('<input\s*?name=["]authenticity_token["].*?value=["](.*?)["]',html)
     postDict['authenticity_token'] = a_token[0]
-    if(a_token):
-        print(a_token[0])
-    else:
-        print('no match')
-    for index, cookie in enumerate(cj):
-        print( '[',index, ']',cookie)
     postData = urllib.parse.urlencode(postDict).encode()
+    for index, cookie in enumerate(cj):
+        tmpcj = str(cookie)
     req = urllib.request.Request(loginurl, postData)
     for key,itm in post_headers.items():
         req.add_header(key,itm)
     html = urllib.request.urlopen(req)
     for index, cookie in enumerate(cj):
-        print( '[',index, ']',cookie)
-    html = urllib.request.urlopen('https://combee.co')
-    reqres = html.read().decode()
-   # print(reqres)
-#loginJiaYuan(username,userpassword,referer,host,cookie,loginurl)
-# postDict = {'channel':'0', 'name':username,'password':userpassword,'ijg_login':'1','position':'0'}
+        if(len(str(cookie))>len(tmpcj)):
+            print('登陆成功！')
+        else:
+            print('登录失败！')
+    html = urllib.request.urlopen('https://combee.co/receipts.json?status=unread')
+    reqres = html.read().decode('utf-8')
+    s = json.loads(reqres)
+    if((len(s['receipts']))):
+        print('你有未读消息！')
+    else:
+        print('你没有未读消息')
+    print('\n\n')
+    usrcho = input('请按数字键选择：\n1.抓取未读消息\n2.抓取已读消息\n')
+    if(int(usrcho)==2):
+        getMes('https://combee.co/receipts.json?status=read','read')
+    else:
+        getMes('https://combee.co/receipts.json?status=unread','unread')
+def getMes(url,urlstat):
+    mescount = 10
+    submes = {}
+    mes = []
+    n = 0
+    mesz = 1
+    while(mescount==10):
+        html = urllib.request.urlopen(url)
+        #a = urllib.request.urlretrieve(url,'testcom.txt')
+        reqres = html.read().decode('utf-8')
+        s = json.loads(reqres)
+        #title body_html name id created_a
+        for item in s['receipts']:
+            submes['num'] = s['receipts'].index(item) + mesz
+            submes['id'] = str(item['id'])
+            submes['created_at'] = str(item['created_at'])
+            submes['name'] = str(item['author']['name'])
+            submes['title'] = str(item['post']['title'])
+            submes['body_html'] = str(item['post']['body_html'])
+            #print(str(item['post']['body_html']))
+            url_maxid = str(item['id'])
+            mes.append(submes.copy())
+            submes.clear()
+        mescount = len(s['receipts'])
+        mesz = mesz + mescount
+        url = 'https://combee.co/receipts.json?max_id=' +  url_maxid + '&status=' + urlstat
+    for it in mes:
+        for key,item in it.items():
+            print('[',key,']',':',item)
+        print('\n')
+    print('共:',mes.__len__(),'条消息')
+
 usrname_com = '13258216325'
 usrpassword_com = '123456'
 usrname = 'p2p_test@yeah.net'
@@ -56,5 +95,5 @@ postDict = {'user[login]':usrname_com,'user[password]':usrpassword_com,'user[rem
 loginurl = 'http://login.jiayuan.com/dologin.php'
 loginurl_com = 'http://combee.co/sign_in'
 #loginJiaYuan(post_headers,postDict,loginurl):
-loginJiaYuan(post_headers,postDict,loginurl_com)
+loginCombee(post_headers,postDict,loginurl_com)
 
