@@ -1,0 +1,112 @@
+import urllib.request
+import optparse
+import http.cookiejar
+import urllib.parse
+import time
+import re
+import os
+import copy
+
+class NetSpider(object):
+	"""docstring for NetSpider"""
+	def __init__(self):
+		self.__mainurl = ""
+		self.__host = ""
+		self.__refer = ""
+		self.__accept = "text/html, application/xhtml+xml, */*" 
+		self.__contenttype = "application/x-www-form-urlencoded"
+		self.__useragent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)"
+		self.__cookielist = http.cookiejar.CookieJar()
+		self.__opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.__cookielist))
+		urllib.request.install_opener(self.__opener)
+		self.__postHeaders = {'Host':self.__host,
+							'Accept':self.__accept,
+							'Refer':self.__refer,
+							'Content-Type':self.__contenttype,
+							'User-Agent':self.__useragent}
+
+	"""属性"""
+	def getMainUrl(self): return self.__mainurl 
+	def setMainUrl(self, value):self.__mainurl = value
+	MainUrl = property(getMainUrl, setMainUrl, "Property MainUrl") 
+
+	def getHost(self): return self.__host 
+	def setHost(self, value):
+		self.__host = value
+		self.__postHeaders['Host'] = value
+	Host = property(getHost, setHost, "Property Host") 
+
+	def getRefer(self): return self.__refer 
+	def setRefer(self, value):
+		self.__refer = value
+		self.__postHeaders['Refer'] = value
+	Refer = property(getRefer, setRefer, "Property Refer") 
+
+	def getAccept(self): return self.__accept 
+	def setAccept(self, value):
+		self.__accept = value
+		self.__postHeaders['Accept'] = value
+	Accept = property(getAccept, setAccept, "Property Accept") 
+
+	def getContentType(self): return self.__contenttype 
+	def setContentType(self, value):
+		self.__contenttype = value
+		self.__postHeaders['Content-Type'] = value
+	ContentType = property(getContentType, setContentType, "Property ContentType") 
+
+	def getUserAgent(self): return self.__useragent 
+	def setUserAgent(self, value):
+		self.__useragent = value
+		self.__postHeaders['User-Agent'] = value
+	UserAgent = property(getUserAgent, setUserAgent, "Property UserAgent") 
+
+	def getCookieList(self): return self.__cookielist
+	def setCookieList(self, value):self.__cookielist = value
+	CookieList = property(getCookieList, setCookieList, "Property CookieList") 
+
+	def getPostHeaders(self): return self.__postHeaders
+	def setPostHeaders(self, value): self.__postHeaders = value
+	PostHeaders = property(getPostHeaders, setPostHeaders, "Property PostHeaders")
+
+	"""私有方法"""
+	def __ErrorHandle(self,errtype):
+		print('发生错误',end = ':')
+		print(errtype)
+
+
+	"""方法"""
+	def GetResFromRequest(self,method,requrl,encodemethod = 'gbk',postdict = {''},reqdata = ''):
+		try:
+			if method == 'POST':
+				if reqdata != '':
+					req = urllib.request.Request(requrl, reqdata)
+				else:
+					postData = urllib.parse.urlencode(postDict).encode()
+					req = urllib.request.Request(requrl, postData)
+			elif method == "GET":
+				req = urllib.request.Request(requrl)
+			for key,itm in self.__postHeaders.items():
+				req.add_header(key,itm)
+			res = urllib.request.urlopen(req)
+			return res.read().decode(encodemethod)
+		except Exception as e:
+			self.__ErrorHandle(e)
+		else:
+			pass
+		finally:
+			pass
+		
+
+	def SearchCookie(self,searchkey):
+		for index, cookie in enumerate(self.__cookielist):
+			if(cookie.name == searchkey):
+				return cookie.value
+		return 'nothing find'
+
+	def ShowCurrentCookie(self):
+		if len(self.__cookielist) == 0:
+			print("未获取到cookie")
+			return 0
+		for index, cookie in enumerate(self.__cookielist):
+			print(index,end=':')
+			print(str(cookie.name) + ' : ' + str(cookie.value))
