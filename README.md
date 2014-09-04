@@ -4,9 +4,9 @@ version：1.0
 
 python 3.3 环境下写的一个简单爬虫类，实现了模拟GET POST 请求，以及简单的cookie管理（搜索，显示）
 
-类名：NetSpider
-引用：import NetSpider
-初始化：a = NetSpider()
+###类名：NetSpider
+###引用：import NetSpider
+###初始化：a = NetSpider()
 
 ###属性：
 	MainUrl:
